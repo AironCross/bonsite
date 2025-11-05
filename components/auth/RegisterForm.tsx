@@ -10,13 +10,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Info } from 'lucide-react';
 
 export function RegisterForm() {
   const { t, locale } = useLanguage();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -29,6 +30,7 @@ export function RegisterForm() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setInfo(null);
 
     if (formData.password !== formData.confirmPassword) {
       setError(
@@ -46,26 +48,27 @@ export function RegisterForm() {
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
+        options: {
+          data: {
+            full_name: formData.fullName,
+            company_name: formData.companyName,
+            language: locale,
+          },
+        },
       });
 
       if (signUpError) throw signUpError;
 
-      if (authData.user) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: authData.user.id,
-            email: formData.email,
-            full_name: formData.fullName,
-            company_name: formData.companyName,
-            language: locale,
-          });
-
-        if (profileError) throw profileError;
+      if (authData.session) {
+        router.push('/dashboard');
+        router.refresh();
+      } else {
+        setInfo(
+          locale === 'hu'
+            ? 'A regisztráció megerősítéséhez ellenőrizd az e-mail postafiókodat.'
+            : 'Please check your inbox to confirm your registration before signing in.'
+        );
       }
-
-      router.push('/dashboard');
-      router.refresh();
     } catch (error: any) {
       setError(error.message || t.contact.error);
     } finally {
@@ -94,6 +97,12 @@ export function RegisterForm() {
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          {info && (
+            <Alert>
+              <Info className="h-4 w-4" />
+              <AlertDescription>{info}</AlertDescription>
             </Alert>
           )}
 

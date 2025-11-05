@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useRef, useState, ReactNode } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import type { User, Session } from '@supabase/supabase-js';
 
@@ -21,6 +21,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
+  const profileSyncRef = useRef<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -39,6 +40,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => subscription.unsubscribe();
   }, [supabase]);
+
+  useEffect(() => {
+    const syncProfile = async () => {
+      if (!user || loading) {
+        profileSyncRef.current = null;
+        return;
+      }
+
+      if (profileSyncRef.current === user.id) {
+        return;
+      }
+
+      const { data: existingProfile, error: fetchError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (fetchError) {
+        console.error('Failed to read profile', fetchError);
+        return;
+      }
+
+      if (!existingProfile) {
+        const metadata = user.user_metadata || {};
+        const { error: upsertError } = await supabase
+          .from('profiles')
+          .upsert(
+            {
+              id: user.id,
+              email: user.email ?? '',
+              full_name: metadata.full_name ?? null,
+              company_name: metadata.company_name ?? null,
+              language: metadata.language ?? 'hu',
+            },
+            { onConflict: 'id' }
+          );
+
+        if (upsertError) {
+          console.error('Failed to ensure profile', upsertError);
+          return;
+        }
+      }
+
+      profileSyncRef.current = user.id;
+    };
+
+    syncProfile();
+  }, [user, supabase, loading]);
 
   return (
     <AuthContext.Provider value={{ user, session, loading }}>
