@@ -22,6 +22,50 @@ export function LoginForm() {
     password: '',
   });
 
+  const getErrorMessage = (authError: unknown) => {
+    if (!authError || typeof authError !== 'object') {
+      return t.auth.errors.unknown;
+    }
+
+    const rawMessage =
+      typeof (authError as { message?: unknown }).message === 'string'
+        ? (authError as { message: string }).message
+        : '';
+    const normalizedMessage = rawMessage.toLowerCase();
+    const status =
+      typeof (authError as { status?: unknown }).status === 'number'
+        ? (authError as { status: number }).status
+        : undefined;
+    const code =
+      typeof (authError as { code?: unknown }).code === 'string'
+        ? ((authError as { code: string }).code || '').toLowerCase()
+        : '';
+
+    if (normalizedMessage.includes('invalid api key')) {
+      return t.auth.errors.invalidApiKey;
+    }
+
+    if (
+      normalizedMessage.includes('invalid login credentials') ||
+      code === 'invalid_credentials'
+    ) {
+      return t.auth.errors.invalidCredentials;
+    }
+
+    if (
+      normalizedMessage.includes('email not confirmed') ||
+      code === 'email_not_confirmed'
+    ) {
+      return t.auth.errors.emailNotConfirmed;
+    }
+
+    if (status === 429 || normalizedMessage.includes('too many requests')) {
+      return t.auth.errors.rateLimit;
+    }
+
+    return t.auth.errors.unknown;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -39,7 +83,7 @@ export function LoginForm() {
       router.push('/dashboard');
       router.refresh();
     } catch (error: any) {
-      setError(error.message || t.contact.error);
+      setError(getErrorMessage(error));
     } finally {
       setLoading(false);
     }

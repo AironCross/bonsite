@@ -26,6 +26,57 @@ export function RegisterForm() {
     companyName: '',
   });
 
+  const getErrorMessage = (authError: unknown) => {
+    if (!authError || typeof authError !== 'object') {
+      return t.auth.errors.unknown;
+    }
+
+    const rawMessage =
+      typeof (authError as { message?: unknown }).message === 'string'
+        ? (authError as { message: string }).message
+        : '';
+    const normalizedMessage = rawMessage.toLowerCase();
+    const status =
+      typeof (authError as { status?: unknown }).status === 'number'
+        ? (authError as { status: number }).status
+        : undefined;
+    const code =
+      typeof (authError as { code?: unknown }).code === 'string'
+        ? ((authError as { code: string }).code || '').toLowerCase()
+        : '';
+
+    if (normalizedMessage.includes('invalid api key')) {
+      return t.auth.errors.invalidApiKey;
+    }
+
+    if (
+      normalizedMessage.includes('already registered') ||
+      code === 'user_already_exists'
+    ) {
+      return t.auth.errors.userAlreadyExists;
+    }
+
+    if (
+      normalizedMessage.includes('password should be') ||
+      code === 'weak_password'
+    ) {
+      return t.auth.errors.weakPassword;
+    }
+
+    if (
+      normalizedMessage.includes('row-level security') ||
+      normalizedMessage.includes('row level security')
+    ) {
+      return t.auth.errors.profileCreation;
+    }
+
+    if (status === 429 || normalizedMessage.includes('too many requests')) {
+      return t.auth.errors.rateLimit;
+    }
+
+    return t.auth.errors.unknown;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -70,7 +121,7 @@ export function RegisterForm() {
         );
       }
     } catch (error: any) {
-      setError(error.message || t.contact.error);
+      setError(getErrorMessage(error));
     } finally {
       setLoading(false);
     }

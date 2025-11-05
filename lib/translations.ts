@@ -98,6 +98,16 @@ export const translations = {
       signUp: 'Regisztráció',
       signingIn: 'Bejelentkezés...',
       signingUp: 'Regisztráció...',
+      errors: {
+        invalidCredentials: 'Hibás e-mail cím vagy jelszó.',
+        invalidApiKey: 'Szerver beállítási hiba: érvénytelen API kulcs.',
+        emailNotConfirmed: 'A fiók még nincs megerősítve. Ellenőrizd az e-mail postafiókod.',
+        userAlreadyExists: 'Ezzel az e-mail címmel már létezik felhasználó.',
+        weakPassword: 'A jelszónak legalább 6 karakter hosszúnak kell lennie.',
+        rateLimit: 'Túl sok próbálkozás történt. Próbáld újra néhány perc múlva.',
+        profileCreation: 'A profil mentése nem sikerült. Kérjük, vedd fel velünk a kapcsolatot.',
+        unknown: 'Váratlan hiba történt. Kérjük, próbáld újra.',
+      },
     },
     contact: {
       title: 'Vedd fel velünk a kapcsolatot',
@@ -218,6 +228,16 @@ export const translations = {
       signUp: 'Sign Up',
       signingIn: 'Signing in...',
       signingUp: 'Signing up...',
+      errors: {
+        invalidCredentials: 'Incorrect email or password.',
+        invalidApiKey: 'Server configuration error: invalid API key.',
+        emailNotConfirmed: 'Your account is not confirmed yet. Please check your inbox.',
+        userAlreadyExists: 'An account already exists with this email address.',
+        weakPassword: 'Password must be at least 6 characters long.',
+        rateLimit: 'Too many attempts. Please try again in a few minutes.',
+        profileCreation: 'We could not save your profile. Please contact us.',
+        unknown: 'An unexpected error occurred. Please try again.',
+      },
     },
     contact: {
       title: 'Contact Us',
